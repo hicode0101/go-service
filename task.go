@@ -32,10 +32,12 @@ type TaskFunc func(ctx context.Context) error
 // Run 实现 Task 接口。
 func (f TaskFunc) Run(ctx context.Context) error { return f(ctx) }
 
-// Initializer 可选扩展接口：任务实现它后，仅当显式执行 init 命令
-// 时才会调用 Init 完成初始化（建目录、准备配置、预热资源等）。
-// init 要求幂等，可重复执行；普通 run 与服务启动不会触发它，
-// 依赖初始化产物的服务请先执行一次 init（或 install 前执行）。
+// Initializer 可选扩展接口：任务实现它后，Init 在两种场景被调用：
+//   - 显式执行 init 命令；
+//   - 执行 install 命令时，注册服务前先执行一次（确保服务运行所依赖
+//     的目录/配置随部署就绪）。
+//
+// Init 要求幂等，可重复执行；普通 run 与服务启动不会触发它。
 type Initializer interface {
 	Init(a *App) error
 }

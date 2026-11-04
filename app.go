@@ -170,9 +170,20 @@ func (a *App) PrintUsage(w *os.File) {
 `)
 }
 
-// cmdInit 执行初始化：创建工作/日志目录，随后调用任务的 Init 回调
-// （任务实现了 Initializer 接口时）。要求幂等，可重复执行。
+// cmdInit 执行初始化（Init 的触发场景之一）：创建工作/日志目录，
+// 随后调用任务的 Init 回调（任务实现了 Initializer 接口时）。
+// 要求幂等，可重复执行。
 func (a *App) cmdInit() error {
+	if err := a.runInit(); err != nil {
+		return err
+	}
+	a.logger.Infof("init completed (platform: %s)", PlatformName())
+	return nil
+}
+
+// runInit 默认初始化动作：确保工作目录与日志目录存在，并调用任务
+// 的 Init 回调。供 init 与 install 命令复用，要求幂等。
+func (a *App) runInit() error {
 	if err := a.prepareDirs(); err != nil {
 		return err
 	}
@@ -181,7 +192,6 @@ func (a *App) cmdInit() error {
 			return fmt.Errorf("init task: %w", err)
 		}
 	}
-	a.logger.Infof("init completed (platform: %s)", PlatformName())
 	return nil
 }
 
@@ -291,10 +301,16 @@ func (a *App) cmdControl(action string) error {
 	return nil
 }
 
-// cmdInstall 注册系统服务。
+// cmdInstall 注册系统服务（Init 的触发场景之二）：注册前先执行一次
+// 初始化（目录准备 + 任务 Init 回调），确保服务运行所依赖的目录/
+// 配置随部署就绪。需要管理员/root 权限。
 func (a *App) cmdInstall() error {
 	p, err := platformFor()
 	if err != nil {
+		return err
+	}
+	// 安装前执行一次初始化（幂等），再注册服务。
+	if err := a.runInit(); err != nil {
 		return err
 	}
 	if err := p.Install(&a.cfg); err != nil {

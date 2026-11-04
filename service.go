@@ -14,7 +14,8 @@
 //	myapp start       启动已注册的系统服务
 //	myapp stop        停止系统服务
 //	myapp restart     重启系统服务
-//	myapp install     注册为系统服务（需要管理员 / root 权限）
+//	myapp install     注册为系统服务（注册前先执行一次 Init 初始化；
+//	                  需要管理员 / root 权限）
 //	myapp uninstall   卸载系统服务（需要管理员 / root 权限）
 //	myapp status      查看服务状态
 //	myapp version     显示版本信息
