@@ -1,0 +1,15 @@
+# 二进制产物
+*.exe
+*.exe~
+demo
+myapp
+
+# 测试与临时文件
+*.test
+*.out
+*.pid
+*.log
+
+# IDE
+.idea/
+.vscode/
